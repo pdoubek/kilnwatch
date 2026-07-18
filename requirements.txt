@@ -1,0 +1,13 @@
+# Production dependencies — pin versions after initial install with:
+#   pip freeze > requirements.txt
+adafruit-circuitpython-max31856
+adafruit-blinka
+RPi.GPIO
+spidev
+flask
+flask-socketio
+sqlalchemy
+plotly
+apscheduler
+pydantic
+python-dotenv

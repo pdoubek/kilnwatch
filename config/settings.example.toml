@@ -1,0 +1,49 @@
+# KilnWatch Configuration Template
+# Copy this file to settings.toml and edit for your setup.
+# Do NOT put secrets here — credentials go in .env only.
+
+[general]
+units = "F"                     # "F" or "C" — default matches Skutt controller (°F)
+sample_interval_seconds = 30    # TC read frequency; range: 5–300
+
+[web]
+host = "0.0.0.0"               # 0.0.0.0 listens on all interfaces
+port = 5000
+debug = false                   # Never true in production
+
+[database]
+path = "data/kilnwatch.db"
+
+[logging]
+level = "INFO"                  # DEBUG | INFO | WARNING | ERROR
+log_to_file = true
+log_path = "logs/kilnwatch.log"
+
+# --- Thermocouple Configuration ---
+# Define up to 4 thermocouples.
+# cs_pin: BCM GPIO pin number used as SPI chip-select for this board.
+# Set enabled = false to skip a channel without removing it.
+
+[[thermocouples]]
+id = 1
+label = "TC1"
+enabled = true
+cs_pin = 8          # GPIO 8 — SPI0_CE0 (hardware CS)
+
+[[thermocouples]]
+id = 2
+label = "TC2"
+enabled = false
+cs_pin = 7          # GPIO 7 — SPI0_CE1 (hardware CS)
+
+[[thermocouples]]
+id = 3
+label = "TC3"
+enabled = false
+cs_pin = 25         # GPIO 25 — software CS
+
+[[thermocouples]]
+id = 4
+label = "TC4"
+enabled = false
+cs_pin = 24         # GPIO 24 — software CS
