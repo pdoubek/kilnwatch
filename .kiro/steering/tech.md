@@ -4,7 +4,7 @@
 
 ### Host Platform
 - **Device:** Raspberry Pi 4 (2GB RAM minimum; 4GB preferred)
-- **OS:** Raspberry Pi OS (64-bit, Lite or Desktop — TBD based on display approach)
+- **OS:** Raspberry Pi OS (64-bit, Full desktop install)
 - **Storage:** 32–64GB microSD card (Class 10 / A1 or better)
 - **Power:** Official Raspberry Pi 4 USB-C power supply (5.1V/3A)
 
@@ -16,7 +16,7 @@
 
 ### Thermocouple Amplifiers
 - **Chip:** MAX31856 (universal TC type, 19-bit resolution, SPI)
-- **Boards:** No-name/clone breakout boards (Adafruit form-factor)
+- **Boards:** Adafruit and No-name/clone breakout boards (Adafruit form-factor)
   - Known issue: clones may omit bypass caps per Maxim datasheet
   - Mitigation: add 100nF across TC+/TC- and 10nF across VCC/GND if noise observed
 - **Quantity:** 1–4 boards on shared SPI bus; one CS GPIO per board
@@ -36,7 +36,24 @@ CS1 (TC2)  — GPIO 7  (pin 26)  [SPI0_CE1 — hardware CS]
 CS2 (TC3)  — GPIO 25 (pin 22)  [software CS]
 CS3 (TC4)  — GPIO 24 (pin 18)  [software CS]
 ```
-NOTE: Verify these assignments against actual wiring before finalizing.
+NOTE: These pin allocations are verified
+
+### Additional GPIO Pin Allocation
+```
+Vin      - 3.3v PWR (pin 17)
+Gnd      - GND (pin 20)
+Fault Flt - GPIO 22 (pin 15)
+Emergency Stop (EStop) - TBD
+Signal - TBD
+Alarm - TBD
+Aux1 (future use) - TBD
+Aux2 (future use) - TBD
+```
+NOTE: TBD pins will be defined as features are fleshed out
+NOTE: Signal and Alarm will be a light, buzzer, or some other indicator of a change of state or alarm condition.
+NOTE: Fault Flt is a single shared GPIO line. With up to 4 MAX31856 boards, this line (if wired/used at all)
+can only indicate that one or more boards are in a fault state, not which one. To identify the faulting board,
+read each board's fault register individually over SPI in software and log the result.
 
 ### Networking
 - **Primary:** Pi 4 onboard WiFi (802.11ac)
@@ -50,7 +67,7 @@ NOTE: Verify these assignments against actual wiring before finalizing.
 
 ### OS & Runtime
 - Raspberry Pi OS Bookworm (64-bit)
-- Python 3.11+
+- Python 3.12+
 - Virtual environment: `venv` at project root (gitignored)
 
 ### Python Dependencies
@@ -67,7 +84,7 @@ NOTE: Verify these assignments against actual wiring before finalizing.
 | `apscheduler` | Background TC sampling scheduler |
 | `pydantic` | Config and data validation |
 | `python-dotenv` | .env secret loading |
-| `tomllib` | TOML config parsing (stdlib in Python 3.11+) |
+| `tomllib` | TOML config parsing (stdlib in Python 3.12+) |
 
 ### Database
 - **Engine:** SQLite via SQLAlchemy
@@ -100,6 +117,20 @@ NOTE: Verify these assignments against actual wiring before finalizing.
 
 ---
 
+## Reference Projects
+
+Sources of design ideas for comparison — not code to copy from.
+
+- **[kiln-controller](https://github.com/jbruce12000/kiln-controller)** — mature open-source Pi-based kiln
+  controller (Python/Flask, MAX31855/31856, SSR-driven PID control). Worth studying for:
+  - Auto-restart / resume behavior after a power outage mid-firing
+  - Simulation mode for developing without hardware (compare against our `simulate_tc.py`)
+  - PID integral windup prevention and its 2-second relay duty cycle (relevant to Future Phase kiln control)
+  - Profile shifting / temperature-matching to compensate for kiln-specific quirks
+  - Its Slack notification watcher pattern (relevant to our segment-transition alerts)
+
+---
+
 ## Decisions Log
 
 | Date | Decision | Rationale |
@@ -108,6 +139,7 @@ NOTE: Verify these assignments against actual wiring before finalizing.
 | 2025-07 | MAX31856 over MAX31855 | Multi-type TC, better resolution, better cold-junction compensation |
 | 2025-07 | Flask over FastAPI | Adequate for single-user embedded; simpler; more community examples |
 | 2025-07 | SQLite over flat CSV | Session management, program/reading joins, query flexibility |
+| 2026-07 | Store readings internally in Celsius | `adafruit-circuitpython-max31856` driver returns °C natively; avoids conversion on every sensor read. Default *display/input* unit is Fahrenheit — see product.md Units |
 | PENDING | Remote access method | Cloudflare Tunnel vs. DDNS+port-forward |
 | PENDING | On-device GUI method | Chromium kiosk vs. Python GUI |
 | PENDING | Display connection | DSI (7" official touchscreen) vs. HDMI |
@@ -115,7 +147,7 @@ NOTE: Verify these assignments against actual wiring before finalizing.
 ---
 
 ## Development Machine
-- **OS:** [FILL IN]
-- **Editor:** [FILL IN]
-- **Python:** [FILL IN version]
-- **Git remote:** https://github.com/[YOUR_USERNAME]/kilnwatch (private repo)
+- **OS:** Ubuntu
+- **Editor:** VSCode with Claude extension
+- **Python:** 3.12+
+- **Git remote:** git@github.com:pdoubek/kilnwatch.git (private repo, ssh access with local private key)
